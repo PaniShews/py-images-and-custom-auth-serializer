@@ -12,6 +12,12 @@ from cinema.models import (
 )
 
 
+class MovieImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Movie
+        fields = ("id", "image")
+
+
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
