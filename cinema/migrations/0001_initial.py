@@ -1,7 +1,7 @@
-import django.contrib.auth.models
-import django.contrib.auth.validators
-import django.utils.timezone
+import cinema.models
+from django.conf import settings
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -9,12 +9,12 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("auth", "0012_alter_user_first_name_max_length"),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="User",
+            name="CinemaHall",
             fields=[
                 (
                     "id",
@@ -25,95 +25,168 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
+                ("name", models.CharField(max_length=255)),
+                ("rows", models.IntegerField()),
+                ("seats_in_row", models.IntegerField()),
+            ],
+        ),
+        migrations.CreateModel(
+            name="Genre",
+            fields=[
                 (
-                    "password",
-                    models.CharField(max_length=128, verbose_name="password"),
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
                 ),
+                ("name", models.CharField(max_length=255, unique=True)),
+            ],
+        ),
+        migrations.CreateModel(
+            name="Actor",
+            fields=[
                 (
-                    "last_login",
-                    models.DateTimeField(
-                        blank=True, null=True, verbose_name="last login"
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("first_name", models.CharField(max_length=255)),
+                ("last_name", models.CharField(max_length=255)),
+            ],
+        ),
+        migrations.CreateModel(
+            name="Movie",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.TextField()),
+                ("duration", models.IntegerField()),
+                (
+                    "image",
+                    models.ImageField(
+                        null=True,
+                        upload_to=cinema.models.movie_image_file_path,
                     ),
                 ),
                 (
-                    "is_superuser",
-                    models.BooleanField(
-                        default=False,
-                        help_text="Designates that this user has all permissions without explicitly assigning them.",
-                        verbose_name="superuser status",
+                    "genres",
+                    models.ManyToManyField(to="cinema.genre"),
+                ),
+                (
+                    "actors",
+                    models.ManyToManyField(to="cinema.actor"),
+                ),
+            ],
+            options={
+                "ordering": ["title"],
+            },
+        ),
+        migrations.CreateModel(
+            name="MovieSession",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("show_time", models.DateTimeField()),
+                (
+                    "movie",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="cinema.movie",
                     ),
                 ),
                 (
-                    "first_name",
-                    models.CharField(
-                        blank=True, max_length=150, verbose_name="first name"
-                    ),
-                ),
-                (
-                    "last_name",
-                    models.CharField(
-                        blank=True, max_length=150, verbose_name="last name"
-                    ),
-                ),
-                (
-                    "is_staff",
-                    models.BooleanField(
-                        default=False,
-                        help_text="Designates whether the user can log into this admin site.",
-                        verbose_name="staff status",
-                    ),
-                ),
-                (
-                    "is_active",
-                    models.BooleanField(
-                        default=True,
-                        help_text="Designates whether this user should be treated as active.",
-                        verbose_name="active",
-                    ),
-                ),
-                (
-                    "date_joined",
-                    models.DateTimeField(
-                        default=django.utils.timezone.now,
-                        verbose_name="date joined",
-                    ),
-                ),
-                (
-                    "email",
-                    models.EmailField(
-                        max_length=254, unique=True, verbose_name="email address"
-                    ),
-                ),
-                (
-                    "groups",
-                    models.ManyToManyField(
-                        blank=True,
-                        help_text="The groups this user belongs to.",
-                        related_name="user_set",
-                        related_query_name="user",
-                        to="auth.group",
-                        verbose_name="groups",
-                    ),
-                ),
-                (
-                    "user_permissions",
-                    models.ManyToManyField(
-                        blank=True,
-                        help_text="User-specific permissions.",
-                        related_name="user_set",
-                        related_query_name="user",
-                        to="auth.permission",
-                        verbose_name="user permissions",
+                    "cinema_hall",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="cinema.cinemahall",
                     ),
                 ),
             ],
             options={
-                "verbose_name": "user",
-                "verbose_name_plural": "users",
-                "abstract": False,
+                "ordering": ["-show_time"],
             },
-            managers=[
-                ("objects", django.contrib.auth.models.UserManager()),
+        ),
+        migrations.CreateModel(
+            name="Order",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
+            options={
+                "ordering": ["-created_at"],
+            },
+        ),
+        migrations.CreateModel(
+            name="Ticket",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("row", models.IntegerField()),
+                ("seat", models.IntegerField()),
+                (
+                    "movie_session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="tickets",
+                        to="cinema.moviesession",
+                    ),
+                ),
+                (
+                    "order",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="tickets",
+                        to="cinema.order",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["row", "seat"],
+                "unique_together": {("movie_session", "row", "seat")},
+            },
         ),
     ]
