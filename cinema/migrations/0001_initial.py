@@ -1,4 +1,3 @@
-import cinema.models
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
@@ -76,13 +75,6 @@ class Migration(migrations.Migration):
                 ("title", models.CharField(max_length=255)),
                 ("description", models.TextField()),
                 ("duration", models.IntegerField()),
-                (
-                    "image",
-                    models.ImageField(
-                        null=True,
-                        upload_to=cinema.models.movie_image_file_path,
-                    ),
-                ),
                 (
                     "genres",
                     models.ManyToManyField(to="cinema.genre"),
